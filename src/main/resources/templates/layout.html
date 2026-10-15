@@ -1,0 +1,595 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+	xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<body>
+
+	<!-- ===== SIDEBAR LAYOUT FRAGMENT ===== -->
+	<div th:fragment="layout(title, content)"
+		style="display: flex; min-height: 100vh; background: #f4f6fb;">
+
+		<!-- Sidebar -->
+		<aside id="appSidebar"
+			style="width: 240px; min-width: 240px; background: linear-gradient(180deg, #0f172a 0%, #1e293b 100%); display: flex; flex-direction: column; position: fixed; top: 0; left: 0; height: 100vh; z-index: 100; transition: width .22s ease;">
+
+			<!-- Brand -->
+			<div class="sidebar-brand"
+				style="padding: 16px 12px 12px; border-bottom: 1px solid rgba(255, 255, 255, 0.08);">
+				<div class="sidebar-brand-row" style="display: flex; align-items: center; gap: 10px;">
+					<div
+						style="width: 36px; height: 36px; background: linear-gradient(135deg, #6366f1, #8b5cf6); border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 18px;">📦</div>
+					<!-- <div style="flex: 1; min-width: 0;"> -->
+					<div id="sidebarBrandText" style="flex:1;min-width:0;">
+						<div
+							style="color: #fff; font-weight: 700; font-size: 15px; line-height: 1.2;">SmartBilling</div>
+						<div style="color: #94a3b8; font-size: 11px;">Inventory
+							System</div>
+					</div>
+					<!-- Move the sidebar toggle into the sidebar header (ChatGPT-like) -->
+					<button type="button" id="sidebarToggle" aria-expanded="true"
+						aria-label="Collapse sidebar"
+						title="Toggle sidebar"
+						style="border: none; background: rgba(255, 255, 255, 0.04); color: #fff; padding: 6px 8px; border-radius: 8px; cursor: pointer; font-size: 16px;">
+						☰</button>
+				</div>
+			</div>
+
+			<!-- Nav Links -->
+			<nav class="sidebar-nav" style="flex: 1; padding: 16px 12px;">
+				<div class="sidebar-section-label"
+					style="color: #64748b; font-size: 10px; font-weight: 600; letter-spacing: 1px; padding: 0 8px; margin-bottom: 8px;">MAIN
+					MENU</div>
+				<a href="/dashboard" aria-label="Dashboard" title="Dashboard"
+					th:attr="aria-current=${currentUri == '/dashboard' ? 'page' : null}"
+					th:classappend="${currentUri == '/dashboard'} ? 'active-nav' : ''"
+					style="display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 8px; color: #cbd5e1; text-decoration: none; font-size: 14px; margin-bottom: 2px; transition: all .2s;"
+					>
+					<span style="font-size: 16px;">📊</span> <span class="nav-label">Dashboard</span>
+				</a> <a href="/inventory" aria-label="Inventory" title="Inventory"
+					th:attr="aria-current=${currentUri == '/inventory' ? 'page' : null}"
+					th:classappend="${currentUri == '/inventory'} ? 'active-nav' : ''"
+					style="display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 8px; color: #cbd5e1; text-decoration: none; font-size: 14px; margin-bottom: 2px; transition: all .2s;"
+					>
+					<span style="font-size: 16px;">📦</span> <span class="nav-label">Inventory</span>
+				</a> <a href="/billing" aria-label="Billing" title="Billing"
+					th:attr="aria-current=${currentUri == '/billing' ? 'page' : null}"
+					th:classappend="${currentUri == '/billing'} ? 'active-nav' : ''"
+					style="display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 8px; color: #cbd5e1; text-decoration: none; font-size: 14px; margin-bottom: 2px; transition: all .2s;"
+					>
+					<span style="font-size: 16px;">🧾</span> <span class="nav-label">Billing</span>
+				</a> <a sec:authorize="hasRole('OWNER')" href="/products" aria-label="Products" title="Products"
+					th:attr="aria-current=${currentUri == '/products' ? 'page' : null}"
+					th:classappend="${currentUri == '/products'} ? 'active-nav' : ''"
+					style="display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 8px; color: #cbd5e1; text-decoration: none; font-size: 14px; margin-bottom: 2px; transition: all .2s;"
+					>
+					<span style="font-size: 16px;">🏷️</span> <span class="nav-label">Products</span>
+				</a>
+			</nav>
+
+			<!-- User Profile -->
+			<div
+				style="padding: 16px 12px; border-top: 1px solid rgba(255, 255, 255, 0.08);">
+				<div style="display: flex; align-items: center; gap: 10px;">
+					<div
+						style="width: 36px; height: 36px; border-radius: 50%; background: linear-gradient(135deg, #f59e0b, #ef4444); display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 700; color: #fff; flex-shrink: 0;">
+						<span
+							th:text="${#strings.substring(#authentication.name,0,1).toUpperCase()}">O</span>
+					</div>
+					<div id="sidebarUserDetails" style="flex: 1; min-width: 0;">
+						<div
+							style="color: #f1f5f9; font-size: 13px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;"
+							th:text="${#authentication.name}">username</div>
+						<div sec:authorize="hasRole('OWNER')"
+							style="color: #f59e0b; font-size: 11px; font-weight: 500;">●
+							Owner</div>
+						<div sec:authorize="hasRole('STAFF')"
+							style="color: #38bdf8; font-size: 11px; font-weight: 500;">●
+							Staff</div>
+					</div>
+					<form th:action="@{/logout}" method="post" style="margin: 0;"
+						id="sidebarLogoutForm">
+						<!-- Keep compact icon in the sidebar - on click will confirm then submit -->
+									<button type="button" title="Logout" aria-label="Logout"
+							onclick="confirmLogout(document.getElementById('sidebarLogoutForm'))"
+							style="background: rgba(255, 255, 255, 0.06); border: none; border-radius: 8px; padding: 6px 10px; color: #f97316; cursor: pointer; font-size: 13px; display: flex; align-items: center; gap: 8px;">
+										<span style="font-size: 16px;" aria-hidden="true">↪</span> <span class="nav-label"
+								style="font-weight: 600; color: #f97316;">Logout</span>
+									</button>
+					</form>
+				</div>
+			</div>
+		</aside>
+
+		<button type="button" id="sidebarBackdrop" class="sidebar-backdrop" aria-label="Close navigation" hidden></button>
+
+		<!-- Main Content -->
+		<main id="appMain"
+			style="margin-left: 240px; flex: 1; display: flex; flex-direction: column; min-width: 0;">
+
+			<!-- Top Bar -->
+			<header
+				class="app-header"
+				style="background: #fff; border-bottom: 1px solid #e2e8f0; padding: 10px 20px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 50;">
+				<div style="display: flex; align-items: center; gap: 12px;">
+					<h6
+						style="margin: 0; font-weight: 700; color: #0f172a; font-size: 16px;"
+						th:text="${title}">Page Title</h6>
+				</div>
+				<div style="display: flex; align-items: center; gap: 12px;">
+					<span style="font-size: 12px; color: #64748b;"> <span
+						th:text="${#temporals.format(#temporals.createNow(), 'EEE, dd MMM yyyy')}"></span>
+					</span>
+				</div>
+			</header>
+
+			<!-- Page Body -->
+			<div class="app-content" style="padding: 28px; flex: 1;">
+				<th:block th:replace="${content}" />
+			</div>
+		</main>
+
+
+	<style>
+.active-nav {
+	background: linear-gradient(135deg, rgba(99, 102, 241, 0.3),
+		rgba(139, 92, 246, 0.2)) !important;
+	color: #a5b4fc !important;
+	border-left: 3px solid #6366f1;
+}
+
+.sidebar-nav a:not(.active-nav):hover,
+.sidebar-nav a:not(.active-nav):focus-visible {
+	background: rgba(255, 255, 255, 0.06);
+}
+
+* {
+	box-sizing: border-box;
+}
+
+body {
+	margin: 0;
+	font-family: 'Segoe UI', system-ui, sans-serif;
+	overflow-x: hidden;
+}
+
+.card-modern {
+	background: #fff;
+	border-radius: 8px;
+	border: 1px solid #e2e8f0;
+	box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
+}
+
+.btn-primary-modern {
+	background: linear-gradient(135deg, #6366f1, #8b5cf6);
+	color: #fff;
+	border: none;
+	border-radius: 8px;
+	padding: 9px 20px;
+	font-size: 14px;
+	font-weight: 600;
+	cursor: pointer;
+	transition: opacity .2s;
+}
+
+.btn-primary-modern:hover {
+	opacity: .88;
+}
+
+.btn-success-modern {
+	background: linear-gradient(135deg, #10b981, #059669);
+	color: #fff;
+	border: none;
+	border-radius: 8px;
+	padding: 9px 20px;
+	font-size: 14px;
+	font-weight: 600;
+	cursor: pointer;
+	transition: opacity .2s;
+}
+
+.btn-success-modern:hover {
+	opacity: .88;
+}
+
+.form-control-modern {
+	border: 1px solid #e2e8f0;
+	border-radius: 8px;
+	padding: 9px 12px;
+	font-size: 14px;
+	width: 100%;
+	outline: none;
+	transition: border .2s;
+}
+
+.form-control-modern:focus {
+	border-color: #6366f1;
+	box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+}
+
+.form-control-modern:disabled {
+	background: #f8fafc;
+	color: #94a3b8;
+	cursor: not-allowed;
+}
+
+.table-modern {
+	width: 100%;
+	border-collapse: collapse;
+	font-size: 14px;
+}
+
+.table-wrap {
+	width: 100%;
+	overflow-x: auto;
+	overscroll-behavior-inline: contain;
+}
+
+.table-wrap:focus-visible {
+	outline-offset: 1px;
+}
+
+.table-modern th {
+	background: #f8fafc;
+	color: #64748b;
+	font-weight: 600;
+	font-size: 12px;
+	text-transform: uppercase;
+	letter-spacing: .5px;
+	padding: 12px 16px;
+	border-bottom: 1px solid #e2e8f0;
+}
+
+.table-modern td {
+	padding: 13px 16px;
+	border-bottom: 1px solid #f1f5f9;
+	color: #334155;
+	vertical-align: middle;
+}
+
+.table-modern tr:hover td {
+	background: #fafbff;
+}
+
+.badge-modern {
+	padding: 4px 10px;
+	border-radius: 20px;
+	font-size: 11px;
+	font-weight: 600;
+}
+
+.badge-danger {
+	background: #fef2f2;
+	color: #ef4444;
+}
+
+.badge-warning {
+	background: #fffbeb;
+	color: #d97706;
+}
+
+.badge-success {
+	background: #f0fdf4;
+	color: #16a34a;
+}
+
+.badge-gray {
+	background: #f1f5f9;
+	color: #64748b;
+}
+
+.alert-modern {
+	border-radius: 10px;
+	padding: 14px 18px;
+	font-size: 14px;
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	margin-bottom: 20px;
+}
+
+.alert-success-modern {
+	background: #f0fdf4;
+	border: 1px solid #bbf7d0;
+	color: #15803d;
+}
+
+.alert-danger-modern {
+	background: #fef2f2;
+	border: 1px solid #fecaca;
+	color: #dc2626;
+}
+
+.alert-warning-modern {
+	background: #fffbeb;
+	border: 1px solid #fde68a;
+	color: #92400e;
+}
+
+/* Sidebar collapsed styles */
+aside#appSidebar.collapsed {
+	width: 64px !important;
+	min-width: 64px !important;
+}
+
+main.collapsed-margin {
+	margin-left: 64px !important;
+}
+
+aside#appSidebar.collapsed nav a {
+	justify-content: center;
+}
+
+aside#appSidebar.collapsed nav a .nav-label {
+	display: none;
+}
+
+aside#appSidebar.collapsed .sidebar-section-label {
+	display: none;
+}
+
+aside#appSidebar.collapsed .sidebar-brand {
+	padding: 12px 4px;
+}
+
+aside#appSidebar.collapsed .sidebar-brand-row {
+	flex-direction: column;
+	gap: 10px;
+}
+
+aside#appSidebar.collapsed #sidebarToggle {
+	width: 36px;
+	height: 36px;
+	padding: 0;
+}
+
+aside#appSidebar.collapsed #sidebarUserDetails {
+	display: none;
+}
+
+aside#appSidebar .nav-label {
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
+/* Toggle & logout button styles */
+#sidebarToggle:hover {
+	background: rgba(0, 0, 0, 0.04);
+}
+
+button.logout-confirm {
+	border: none;
+	background: transparent;
+	cursor: pointer;
+}
+
+aside#appSidebar.collapsed > div:last-child {
+	padding: 12px 4px !important;
+}
+
+aside#appSidebar.collapsed > div:last-child > div {
+	flex-direction: column;
+	gap: 10px;
+}
+
+aside#appSidebar.collapsed #sidebarLogoutForm {
+	margin: 0 auto !important;
+}
+
+aside#appSidebar.collapsed #sidebarLogoutForm button {
+	width: 36px;
+	height: 36px;
+	justify-content: center;
+	padding: 0 !important;
+}
+
+:focus-visible {
+	outline: 3px solid #2dd4bf;
+	outline-offset: 2px;
+}
+
+@media (max-width: 980px) {
+	.dashboard-stats {
+		grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+	}
+
+	.workspace-grid {
+		grid-template-columns: minmax(0, 1fr) !important;
+	}
+
+	#appMain > .app-content {
+		padding: 20px !important;
+	}
+}
+
+@media (max-width: 760px) {
+	body.sidebar-open {
+		overflow: hidden;
+	}
+
+	#appSidebar {
+		box-shadow: 8px 0 24px rgba(15, 23, 42, 0.16);
+	}
+
+	.sidebar-backdrop:not([hidden]) {
+		position: fixed;
+		inset: 0;
+		z-index: 90;
+		width: 100%;
+		height: 100%;
+		border: 0;
+		background: rgba(15, 23, 42, 0.42);
+	}
+
+	#appMain {
+		margin-left: 64px !important;
+	}
+
+	#appMain > .app-header {
+		padding: 10px 14px !important;
+	}
+
+	#appMain > .app-header > div:last-child > span {
+		display: none;
+	}
+
+	#appMain > .app-content {
+		padding: 16px !important;
+	}
+
+	.dashboard-charts {
+		grid-template-columns: minmax(0, 1fr) !important;
+	}
+
+	.dashboard-stats .card-modern {
+		min-width: 0;
+		padding: 14px !important;
+	}
+
+	.dashboard-stats .stat-revenue {
+		font-size: 20px !important;
+		white-space: nowrap;
+	}
+
+	.table-wrap .table-modern {
+		min-width: 640px;
+	}
+}
+
+@media (max-width: 420px) {
+	#appMain > .app-content {
+		padding: 12px !important;
+	}
+
+	.dashboard-stats {
+		gap: 10px !important;
+	}
+
+}
+
+@media (prefers-reduced-motion: reduce) {
+	*,
+	*::before,
+	*::after {
+		 scroll-behavior: auto !important;
+		 animation-duration: 0.01ms !important;
+		 animation-iteration-count: 1 !important;
+		 transition-duration: 0.01ms !important;
+	}
+}
+</style>
+
+	<script>
+		(function() {
+			function initSidebar() {
+				const sidebar = document.getElementById('appSidebar');
+				const main = document.getElementById('appMain');
+				const button = document.getElementById('sidebarToggle');
+				const backdrop = document.getElementById('sidebarBackdrop');
+				const sidebarQuery = window.matchMedia('(max-width: 760px)');
+				let compactViewport = sidebarQuery.matches;
+
+				if (!sidebar || !main || !button)
+					return;
+
+				function setSidebar(collapsed) {
+					sidebar.classList.toggle('collapsed', collapsed);
+					document.body.classList.toggle('sidebar-open', compactViewport && !collapsed);
+					if (backdrop) {
+						backdrop.hidden = !compactViewport || collapsed;
+					}
+
+					sidebar.style.width = collapsed ? '64px' : '240px';
+					sidebar.style.minWidth = collapsed ? '64px' : '240px';
+
+					main.style.marginLeft = collapsed ? '64px' : '240px';
+
+					button.setAttribute('aria-expanded', String(!collapsed));
+					button.setAttribute('aria-label', collapsed ? 'Expand sidebar' : 'Collapse sidebar');
+
+					button.title = collapsed ? 'Expand sidebar'
+							: 'Collapse sidebar';
+
+					// Hide navigation labels when collapsed
+					sidebar.querySelectorAll('.nav-label').forEach(
+							function(label) {
+								label.style.display = collapsed ? 'none' : '';
+							});
+
+					// Hide brand text when collapsed
+					const brandText = document
+							.getElementById('sidebarBrandText');
+					if (brandText) {
+						brandText.style.display = collapsed ? 'none' : '';
+					}
+
+					if (!compactViewport) {
+						try {
+							localStorage.setItem('sb:sidebarCollapsed',
+									collapsed ? '1' : '0');
+						} catch (error) {
+							// Storage may be unavailable
+						}
+					}
+				}
+
+				// Restore saved state without toggling it accidentally
+				let collapsed = compactViewport;
+
+				try {
+					const savedState = localStorage.getItem('sb:sidebarCollapsed');
+					if (!compactViewport && savedState !== null) {
+						collapsed = savedState === '1';
+					}
+				} catch (error) {
+				}
+
+				setSidebar(collapsed);
+				sidebarQuery.addEventListener('change', function(event) {
+					compactViewport = event.matches;
+					let nextCollapsed = compactViewport;
+					if (!compactViewport) {
+						try {
+							nextCollapsed = localStorage.getItem('sb:sidebarCollapsed') === '1';
+						} catch (error) {
+						}
+					}
+					setSidebar(nextCollapsed);
+				});
+
+				if (backdrop) {
+					backdrop.onclick = function() {
+						setSidebar(true);
+					};
+				}
+
+				document.addEventListener('keydown', function(event) {
+					if (event.key === 'Escape' && compactViewport && !sidebar.classList.contains('collapsed')) {
+						setSidebar(true);
+					}
+				});
+
+				// Attach exactly one click handler
+				button.onclick = function() {
+					setSidebar(!sidebar.classList.contains('collapsed'));
+				};
+			}
+
+			window.confirmLogout = function(form) {
+				if (form && confirm('Are you sure you want to log out?')) {
+					form.submit();
+				}
+			};
+
+			// Initialize whether the DOM is already loaded or not
+			if (document.readyState === 'loading') {
+				document.addEventListener('DOMContentLoaded', initSidebar);
+			} else {
+				initSidebar();
+			}
+		})();
+	</script>
+
+	</div>
+
+</body>
+</html>
